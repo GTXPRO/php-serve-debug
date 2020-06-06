@@ -12,6 +12,10 @@ require_once __DIR__ . '/vendor/autoload.php';
 error_reporting(-1);
 ini_set('display_errors', 1);
 
-$console = new \NGUYEN\CLI\Console();
+$app = require __DIR__. '/Core/bootstrap.php';
+
+$console = new \NGUYEN\CLI\Console($app);
 
 $console->run();
+
+$console->show();
