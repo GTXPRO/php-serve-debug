@@ -1,0 +1,16 @@
+{
+    "name": "nguyendat/debug",
+    "description": "debug",
+    "authors": [
+        {
+            "name": "NguyenDat",
+            "email": "nguyendinhdat@getflycrm.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "NGUYEN\\": "Core"
+        }
+    }
+}
