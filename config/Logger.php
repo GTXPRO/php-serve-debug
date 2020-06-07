@@ -1,7 +1,7 @@
 <?php
 namespace Config;
 
-use QTCS\Database\BaseConfig;
+use QTCS\Config\BaseConfig;
 
 class Logger extends BaseConfig {
 	public $threshold = 3;

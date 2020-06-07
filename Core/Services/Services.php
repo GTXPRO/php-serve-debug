@@ -2,8 +2,10 @@
 namespace QTCS\Services;
 
 use Config\App;
+use Config\Cache;
 use Config\Logger;
 use Config\Modules;
+use QTCS\Cache\CacheFactory;
 use QTCS\Filters\Filters;
 use QTCS\Http\CLIRequest;
 use QTCS\Http\IncomingRequest;
@@ -171,5 +173,40 @@ class Services extends BaseServices {
 		}
 
 		return new Router($routes, $request);
+	}
+
+	public static function renderer(string $viewPath = null, $config = null, bool $getShared = true)
+	{
+		if ($getShared)
+		{
+			return static::getSharedInstance('renderer', $viewPath, $config);
+		}
+
+		if (is_null($config))
+		{
+			$config = new \Config\View();
+		}
+
+		if (is_null($viewPath))
+		{
+			$viewPath = ROOT_PATH . 'resources/views/';
+		}
+
+		return new \QTCS\View\View($config, $viewPath, static::locator(), DEBUG, static::logger());
+	}
+
+	public static function cache(Cache $config = null, bool $getShared = true)
+	{
+		if ($getShared)
+		{
+			return static::getSharedInstance('cache', $config);
+		}
+
+		if (! is_object($config))
+		{
+			$config = new Cache();
+		}
+
+		return CacheFactory::getHandler($config);
 	}
 }

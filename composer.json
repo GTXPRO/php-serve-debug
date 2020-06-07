@@ -11,7 +11,8 @@
         "ext-curl": "*",
         "ext-intl": "*",
         "ext-json": "*",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "laminas/laminas-escaper": "^2.6"
     },
     "autoload": {
         "psr-4": {

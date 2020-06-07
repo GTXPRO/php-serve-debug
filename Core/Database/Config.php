@@ -1,6 +1,8 @@
 <?php
 namespace QTCS\Database;
 
+use QTCS\Config\BaseConfig;
+
 class Config extends BaseConfig {
 	static protected $instances = [];
 	static protected $factory;

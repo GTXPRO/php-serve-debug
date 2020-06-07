@@ -1,17 +1,14 @@
 <?php
-namespace App\Controller;
+namespace App\Controllers;
 
-use Psr\Log\LoggerInterface;
 use QTCS\Controller;
-use QTCS\Http\RequestInterface;
-use QTCS\Http\ResponseInterface;
 
 class BaseController extends Controller {
 	protected $helpers = [];
 	public function initController(
-		RequestInterface $request,
-		ResponseInterface $response,
-		LoggerInterface $logger
+		\QTCS\Http\RequestInterface $request,
+		\QTCS\Http\ResponseInterface $response,
+		\Psr\Log\LoggerInterface $logger
 	)
 	{
 		parent::initController($request, $response, $logger);

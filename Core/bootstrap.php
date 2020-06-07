@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../vendor/autoload.php';
 $realPath = __DIR__ . '/..';
 if (! defined('CORE_PATH'))
 {
@@ -23,7 +24,7 @@ if (! defined('COMPOSER_PATH'))
 
 if (! defined('WRITE_PATH'))
 {
-	define('WRITE_PATH', realpath(__DIR__. '/../../logs') . DIRECTORY_SEPARATOR);
+	define('WRITE_PATH', realpath(__DIR__. '/../../storage') . DIRECTORY_SEPARATOR);
 }
 
 if (! defined('DEBUG')) {
@@ -32,20 +33,20 @@ if (! defined('DEBUG')) {
 
 require_once __DIR__. '/Common.php';
 
-require_once CORE_PATH . 'Config/AutoloadConfig.php';
+// require_once CORE_PATH . 'Config/AutoloadConfig.php';
 if (! class_exists(Config\Autoload::class, false))
 {
-	require_once ROOT_PATH . 'config/Autoload.php';
-	require_once ROOT_PATH . 'config/Modules.php';
+	// require_once ROOT_PATH . 'config/Autoload.php';
+	// require_once ROOT_PATH . 'config/Modules.php';
 }
 
 if (! class_exists(Config\App::class, false)) {
-	require_once ROOT_PATH . 'config/App.php';
+	// require_once ROOT_PATH . 'config/App.php';
 }
 
-require_once CORE_PATH . 'Autoloader/Autoloader.php';
-require_once CORE_PATH. '/Services/BaseServices.php';
-require_once CORE_PATH. '/Services/Services.php';
+// require_once CORE_PATH . 'Autoloader/Autoloader.php';
+// require_once CORE_PATH. '/Services/BaseServices.php';
+// require_once CORE_PATH. '/Services/Services.php';
 
 $loader = QTCS\Services\Services::autoloader();
 $loader->initialize(new Config\Autoload(), new Config\Modules());

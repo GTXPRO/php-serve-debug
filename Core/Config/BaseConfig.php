@@ -1,5 +1,5 @@
 <?php
-namespace QTCS\Database;
+namespace QTCS\Config;
 
 class BaseConfig {
 	public static $registrars = [];

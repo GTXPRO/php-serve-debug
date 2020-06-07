@@ -2,9 +2,14 @@
 
 namespace QTCS;
 
+use Closure;
+use Config\Cache;
 use QTCS\Http\CLIRequest;
+use QTCS\Http\DownloadResponse;
+use QTCS\Http\RedirectResponse;
 use QTCS\Http\Response;
 use QTCS\Http\Request;
+use QTCS\Http\ResponseInterface;
 use QTCS\Http\URI;
 use QTCS\Router\RouteCollectionInterface;
 use QTCS\Services\Services;
@@ -35,7 +40,6 @@ class Loader
 
 		$this->detectEnvironment();
 
-		echo "Loader initialize \n";
 	}
 
 	public function run(RouteCollectionInterface $routes = null, bool $returnResponse = false)
@@ -45,14 +49,31 @@ class Loader
 		$this->forceSecureAccess();
 		$this->spoofRequestMethod();
 
+		$cacheConfig = new Cache();
+
+		// Tam bo Cache
+		
+		// $response    = $this->displayCache($cacheConfig);
+
+		// if ($response instanceof ResponseInterface)
+		// {
+		// 	if ($returnResponse)
+		// 	{
+		// 		return $response;
+		// 	}
+
+		// 	$this->response->pretend($this->useSafeOutput)->send();
+		// 	$this->callExit(0);
+		// }
+
 		try {
-			return $this->handleRequest($routes, $returnResponse);
+			return $this->handleRequest($routes, $cacheConfig, $returnResponse);
 		} catch (\RuntimeException $e) {
 			echo "Run loader failed !!!". $e->getMessage();
 		}
 	}
 
-	protected function handleRequest(RouteCollectionInterface $routes = null, bool $returnResponse = false)
+	protected function handleRequest(RouteCollectionInterface $routes = null, $cacheConfig, bool $returnResponse = false)
 	{
 		$routeFilter = $this->tryToRouteIt($routes);
 
@@ -65,9 +86,18 @@ class Loader
 		}
 
 		$uri = $this->request instanceof CLIRequest ? $this->request->getPath() : $this->request->uri->getPath();
-
+		
 		if (!defined('QTCS')) {
-			echo "Run with browser";
+			$possibleRedirect = $filters->run($uri, 'before');
+			if ($possibleRedirect instanceof RedirectResponse)
+			{
+				return $possibleRedirect->send();
+			}
+
+			if ($possibleRedirect instanceof ResponseInterface)
+			{
+				return $possibleRedirect->send();
+			}
 		}
 
 		$returned = $this->startController();
@@ -78,6 +108,8 @@ class Loader
 
 			$returned = $this->runController($controller);
 		}
+
+		$this->gatherOutput($cacheConfig, $returned);
 
 		if (! defined('QTCS')) {
 			$filters->setResponse($this->response);
@@ -117,7 +149,6 @@ class Loader
 				define('ENVIRONMENT', $_SERVER['ENVIRONMENT'] ?? 'production');
 			}
 		}
-		echo "Run detect environment \n";
 	}
 
 	protected function startController()
@@ -175,14 +206,103 @@ class Loader
 
 	protected function forceSecureAccess($duration = 31536000)
 	{
-		if (
-			isset($this->config->forceGlobalSecureRequests) &&
-			$this->config->forceGlobalSecureRequests !== true
-		) {
+		if ($this->config->forceGlobalSecureRequests !== true) {
 			return;
 		}
 
 		force_https($duration, $this->request, $this->response);
+	}
+
+	public function displayCache($config)
+	{
+		if ($cachedResponse = cache()->get($this->generateCacheName($config)))
+		{
+			$cachedResponse = unserialize($cachedResponse);
+			if (! is_array($cachedResponse) || ! isset($cachedResponse['output']) || ! isset($cachedResponse['headers']))
+			{
+				throw new \Exception('Error unserializing page cache');
+			}
+
+			$headers = $cachedResponse['headers'];
+			$output  = $cachedResponse['output'];
+
+			// Clear all default headers
+			foreach ($this->response->getHeaders() as $key => $val)
+			{
+				$this->response->removeHeader($key);
+			}
+
+			// Set cached headers
+			foreach ($headers as $name => $value)
+			{
+				$this->response->setHeader($name, $value);
+			}
+
+			$output = $this->displayPerformanceMetrics($output);
+			$this->response->setBody($output);
+
+			return $this->response;
+		}
+
+		return false;
+	}
+
+	public static function cache(int $time)
+	{
+		static::$cacheTTL = $time;
+	}
+
+	public function cachePage(Cache $config)
+	{
+		$headers = [];
+		foreach ($this->response->getHeaders() as $header)
+		{
+			$headers[$header->getName()] = $header->getValueLine();
+		}
+
+		return cache()->save(
+						$this->generateCacheName($config), serialize(['headers' => $headers, 'output' => $this->output]), static::$cacheTTL
+		);
+	}
+
+	public function getPerformanceStats(): array
+	{
+		return [
+			'startTime' => $this->startTime,
+			'totalTime' => $this->totalTime,
+		];
+	}
+
+	protected function generateCacheName($config): string
+	{
+		if (get_class($this->request) === CLIRequest::class)
+		{
+			return md5($this->request->getPath());
+		}
+
+		$uri = $this->request->uri;
+
+		if ($config->cacheQueryString)
+		{
+			$name = URI::createURIString(
+							$uri->getScheme(), $uri->getAuthority(), $uri->getPath(), $uri->getQuery()
+			);
+		}
+		else
+		{
+			$name = URI::createURIString(
+							$uri->getScheme(), $uri->getAuthority(), $uri->getPath()
+			);
+		}
+
+		return md5($name);
+	}
+
+	public function displayPerformanceMetrics(string $output): string
+	{
+		$this->totalTime = 0;
+
+		return str_replace('{elapsed_time}', $this->totalTime, $output);
 	}
 
 	public function setPath(string $path)
@@ -255,6 +375,105 @@ class Loader
 		return $output;
 	}
 
+	protected function display404errors(\RuntimeException $e)
+	{
+		// Is there a 404 Override available?
+		if ($override = $this->router->get404Override())
+		{
+			if ($override instanceof Closure)
+			{
+				echo $override($e->getMessage());
+			}
+			else if (is_array($override))
+			{
+				$this->benchmark->start('controller');
+				$this->benchmark->start('controller_constructor');
+
+				$this->controller = $override[0];
+				$this->method     = $override[1];
+
+				unset($override);
+
+				$controller = $this->createController();
+				$this->runController($controller);
+			}
+
+			$cacheConfig = new Cache();
+			$this->gatherOutput($cacheConfig);
+			$this->sendResponse();
+
+			return;
+		}
+
+		// Display 404 Errors
+		$this->response->setStatusCode($e->getCode());
+
+		if (ENVIRONMENT !== 'testing')
+		{
+			// @codeCoverageIgnoreStart
+			if (ob_get_level() > 0)
+			{
+				ob_end_flush();
+			}
+			// @codeCoverageIgnoreEnd
+		}
+		else
+		{
+			// When testing, one is for phpunit, another is for test case.
+			if (ob_get_level() > 2)
+			{
+				ob_end_flush();
+			}
+		}
+
+		throw new \RuntimeException("Page Not Found");
+		// throw PageNotFoundException::forPageNotFound(ENVIRONMENT !== 'production' || is_cli() ? $e->getMessage() : '');
+	}
+
+	protected function gatherOutput($cacheConfig = null, $returned = null)
+	{
+		$this->output = ob_get_contents();
+		// If buffering is not null.
+		// Clean (erase) the output buffer and turn off output buffering
+		if (ob_get_length())
+		{
+			ob_end_clean();
+		}
+
+		if ($returned instanceof DownloadResponse)
+		{
+			$this->response = $returned;
+			return;
+		}
+		// If the controller returned a response object,
+		// we need to grab the body from it so it can
+		// be added to anything else that might have been
+		// echoed already.
+		// We also need to save the instance locally
+		// so that any status code changes, etc, take place.
+		if ($returned instanceof Response)
+		{
+			$this->response = $returned;
+			$returned       = $returned->getBody();
+		}
+
+		if (is_string($returned))
+		{
+			$this->output .= $returned;
+		}
+
+		// Cache it without the performance metrics replaced
+		// so that we can have live speed updates along the way.
+		if (static::$cacheTTL > 0)
+		{
+			$this->cachePage($cacheConfig);
+		}
+
+		$this->output = $this->displayPerformanceMetrics($this->output);
+
+		$this->response->setBody($this->output);
+	}
+
 	public function storePreviousURL($uri)
 	{
 		// Ignore CLI requests
@@ -300,5 +519,10 @@ class Loader
 		}
 
 		return (is_cli() && ! (ENVIRONMENT === 'testing')) ? $this->request->getPath() : $this->request->uri->getPath();
+	}
+
+	protected function callExit($code)
+	{
+		exit($code);
 	}
 }

@@ -7,7 +7,6 @@ $routes = Services::routes();
 
 if (file_exists(CORE_PATH . 'Router/Routes.php'))
 {
-	echo "Load Router from Core \n";
 	require CORE_PATH . 'Router/Routes.php';
 }
 
@@ -19,3 +18,4 @@ $routes->set404Override();
 $routes->setAutoRoute(true);
 
 $routes->get('/', 'Home::index');
+$routes->get('/demo', 'Home::demo');

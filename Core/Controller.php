@@ -18,7 +18,7 @@ class Controller {
 		$this->request  = $request;
 		$this->response = $response;
 		$this->logger   = $logger;
-
+		
 		if ($this->forceHTTPS > 0)
 		{
 			$this->forceHTTPS($this->forceHTTPS);
