@@ -1,7 +1,7 @@
 <?php
-namespace NGUYEN\CLI;
+namespace QTCS\CLI;
 
-use NGUYEN\Loader;
+use QTCS\Loader;
 
 class Console {
 	protected $app;
@@ -20,7 +20,7 @@ class Console {
 	public function show()
 	{
 		CLI::newLine(1);
-		CLI::write(CLI::color('NGUYEN CLI Tool', 'red')
+		CLI::write(CLI::color('QTCS CLI Tool', 'red')
 				. ' - Version ' . Loader::VERSION
 				. ' - Server-Time: ' . date('Y-m-d H:i:sa'));
 		CLI::newLine(1);

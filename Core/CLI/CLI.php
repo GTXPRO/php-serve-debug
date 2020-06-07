@@ -1,7 +1,7 @@
 <?php
-namespace NGUYEN\CLI;
+namespace QTCS\CLI;
 
-use NGUYEN\CLI\CLIException;
+use QTCS\CLI\CLIException;
 
 class CLI {
 	protected static $segments = [];

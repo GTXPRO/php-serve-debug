@@ -14,7 +14,7 @@ ini_set('display_errors', 1);
 
 $app = require __DIR__. '/Core/bootstrap.php';
 
-$console = new \NGUYEN\CLI\Console($app);
+$console = new \QTCS\CLI\Console($app);
 
 $console->run();
 

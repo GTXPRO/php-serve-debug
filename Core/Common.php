@@ -1,8 +1,8 @@
 <?php
 
-use NGUYEN\Http\URI;
-use NGUYEN\Config\Config;
-use NGUYEN\Config\Services;
+use QTCS\Http\URI;
+use QTCS\Config\Config;
+use QTCS\Config\Services;
 
 if (! function_exists('force_https'))
 {

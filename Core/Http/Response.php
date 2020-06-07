@@ -1,5 +1,5 @@
 <?php
-namespace NGUYEN\Http;
+namespace QTCS\Http;
 
 class Response {
 	

@@ -1,5 +1,5 @@
 <?php
-namespace NGUYEN\Config;
+namespace QTCS\Config;
 
 class Config {
 	static private $instances = [];

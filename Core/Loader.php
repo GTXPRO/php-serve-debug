@@ -1,5 +1,5 @@
 <?php
-namespace NGUYEN;
+namespace QTCS;
 
 class Loader {
 	const VERSION = '1.0';

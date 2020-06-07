@@ -1,5 +1,5 @@
 <?php
-namespace NGUYEN\Config;
+namespace QTCS\Config;
 
 class Services extends BaseServices {
 	public static function request(App $config = null, bool $getShared = true)
