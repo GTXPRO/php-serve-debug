@@ -7,10 +7,24 @@
             "email": "nguyendinhdat@getflycrm.com"
         }
     ],
-    "require": {},
+    "require": {
+        "ext-curl": "*",
+        "ext-intl": "*",
+        "ext-json": "*",
+        "psr/log": "^1.1"
+    },
     "autoload": {
         "psr-4": {
-            "QTCS\\": "Core"
-        }
+            "QTCS\\": "Core",
+            "App\\": "app/",
+            "Config\\": "config/",
+            "Log\\": "logs/",
+            "Resources\\": "resources/",
+            "View\\": "resources/views/",
+            "Routes\\": "routes/"
+        },
+        "files": [
+            "Core/Common.php"
+        ]
     }
 }

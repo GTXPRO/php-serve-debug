@@ -1,0 +1,26 @@
+#!/usr/bin/env php
+<?php
+define('QTCS', true);
+
+if (substr(php_sapi_name(), 0, 3) === 'cgi') {
+	die("The cli tool is not supported when running php-cgi. It needs php-cli to function!\n\n");
+}
+
+define('PUBLIC_PATH', __DIR__ . '/public' . DIRECTORY_SEPARATOR);
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+error_reporting(-1);
+ini_set('display_errors', 1);
+
+$app = require __DIR__ . '/Core/bootstrap.php';
+
+$console = new \QTCS\CLI\Console($app);
+
+$console->show();
+
+$response = $console->run();
+
+if ($response->getStatusCode() >= 300) {
+	exit($response->getStatusCode());
+}
