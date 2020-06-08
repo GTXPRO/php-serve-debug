@@ -169,7 +169,7 @@ class FileLocator {
 		{
 			foreach ($paths as $path)
 			{
-				if ($prefix === 'CodeIgniter')
+				if ($prefix === 'QTCS')
 				{
 					$system = [
 						'prefix' => $prefix,
